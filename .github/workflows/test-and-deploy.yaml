@@ -1,0 +1,40 @@
+name: CICD
+
+on:
+#  push:
+#    branches: [main]
+  workflow_dispatch: # comment this line and uncomment above to enable deploy on push
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    container: openjdk
+    steps:
+      - uses: actions/checkout@v2
+      # Compile all java files with junit
+      - name: Compile and Build Project
+        run: javac -cp "junit-4.10.jar:." *.java
+
+      # Run Addition Tests
+      - name: Run TestAdd
+        run: |
+          javac -cp "junit-4.10.jar:." *.java
+          java -cp "junit-4.10.jar:." org.junit.runner.JUnitCore TestAdd
+
+      # Run Subtraction Tests
+      - name: Run TestSub 
+        run: |
+          javac -cp "junit-4.10.jar:." *.java
+          java -cp "junit-4.10.jar:." org.junit.runner.JUnitCore TestSub
+
+      # Deploy to server
+      - name: Deploy
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }} 
+          username: ${{ secrets.USERNAME }}
+          password: ${{ secrets.PASSWORD }}
+          port: ${{ secrets.PORT }}
+          script: |
+              cd DeployDemo
+              git pull
